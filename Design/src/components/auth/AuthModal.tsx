@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Mail, Lock } from 'lucide-react';
+import { X, User, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 interface AuthModalProps {
@@ -10,7 +10,7 @@ interface AuthModalProps {
 
 export const AuthModal = ({ isOpen, onClose, onSwitchToRegister }: AuthModalProps) => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -21,10 +21,14 @@ export const AuthModal = ({ isOpen, onClose, onSwitchToRegister }: AuthModalProp
     setError('');
     
     try {
-      await login(email, password);
+      await login(loginValue, password);
       onClose();
-    } catch (err) {
-      setError('Nepodařilo se přihlásit. Zkontrolujte přihlašovací údaje.');
+    } catch (err: any) {
+      if (err?.message === 'invalid_credentials') {
+        setError('Špatný e-mail/username nebo heslo.');
+      } else {
+        setError('Nepodařilo se přihlásit. Zkuste to znovu.');
+      }
     }
   };
 
@@ -76,14 +80,14 @@ export const AuthModal = ({ isOpen, onClose, onSwitchToRegister }: AuthModalProp
 
           <div>
             <label className="flex items-center gap-2 font-display text-sm tracking-wider mb-2">
-              <Mail className="w-4 h-4 text-[#912D3C]" strokeWidth={2} />
-              E-MAIL
+              <User className="w-4 h-4 text-[#912D3C]" strokeWidth={2} />
+              E-mail nebo username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vas@email.cz"
+              type="text"
+              value={loginValue}
+              onChange={(e) => setLoginValue(e.target.value)}
+              placeholder="email@... nebo username"
               required
               className="w-full px-4 py-3 border-2 border-gray-300 bg-[#f8f8f8] font-serif focus:border-[#912D3C] focus:outline-none transition-colors"
             />

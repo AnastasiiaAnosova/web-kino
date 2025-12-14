@@ -1,222 +1,87 @@
 import { Film, Showtime } from '../types';
-import { API_BASE_URL, API_ENDPOINTS, getApiHeaders, handleApiError, USE_MOCK_DATA } from './config';
+import { API_BASE_URL, API_ENDPOINTS, USE_MOCK_DATA } from './config';
 
-// Mock data pro vývoj
-const mockFilms: Film[] = [
-  {
-    id: '1',
-    title: 'MODERNÍ DOBA',
-    subtitle: 'CHARLES CHAPLIN',
-    year: '1936',
-    duration: '87 MIN',
-    image: 'https://images.unsplash.com/photo-1489599735734-79b4d4c4b5c8?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's1', date: '2025-11-25', time: '19:00', available: true },
-      { id: 's2', date: '2025-11-25', time: '21:30', available: true },
-      { id: 's3', date: '2025-11-26', time: '19:00', available: true },
-      { id: 's4', date: '2025-11-26', time: '21:30', available: true }
-    ],
-    description: 'Mistrovská satira na industriální věk',
-    country: 'USA',
-    language: 'Němý film s hudbou',
-    awards: [
-      'Nominace na Oscara za nejlepší hudbu',
-      'Zařazen do National Film Registry (1989)',
-      'Umístěn mezi 100 nejlepších amerických filmů AFI'
-    ],
-    rating: 4.7,
-    reviewCount: 128
-  },
-  {
-    id: '2',
-    title: 'ÚSVIT',
-    subtitle: 'F.W. MURNAU',
-    year: '1927',
-    duration: '94 MIN',
-    image: 'https://images.unsplash.com/photo-1571847140471-1d7766e825ea?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's5', date: '2025-11-25', time: '17:00', available: true },
-      { id: 's6', date: '2025-11-25', time: '20:00', available: true },
-      { id: 's7', date: '2025-11-26', time: '17:00', available: true }
-    ],
-    description: 'Poetické drama o lásce a vykoupení',
-    country: 'USA',
-    language: 'Němý film s hudbou'
-  },
-  {
-    id: '3',
-    title: 'METROPOLIS',
-    subtitle: 'FRITZ LANG',
-    year: '1927',
-    duration: '148 MIN',
-    image: 'https://images.unsplash.com/photo-1587555009307-4b73aaab7d9c?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's8', date: '2025-11-25', time: '18:30', available: true },
-      { id: 's9', date: '2025-11-26', time: '18:30', available: true }
-    ],
-    description: 'Futuristická vize společnosti',
-    country: 'Německo',
-    language: 'Němý film s hudbou'
-  },
-  {
-    id: '4',
-    title: 'DR. CALIGARI',
-    subtitle: 'ROBERT WIENE',
-    year: '1920',
-    duration: '76 MIN',
-    image: 'https://images.unsplash.com/photo-1701977130396-87d72a51e843?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's10', date: '2025-11-25', time: '19:30', available: true },
-      { id: 's11', date: '2025-11-25', time: '22:00', available: true },
-      { id: 's12', date: '2025-11-26', time: '19:30', available: true }
-    ],
-    description: 'Klasika německého expresionismu',
-    country: 'Německo',
-    language: 'Němý film s hudbou'
-  },
-  {
-    id: '5',
-    title: 'NOSFERATU',
-    subtitle: 'F.W. MURNAU',
-    year: '1922',
-    duration: '94 MIN',
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's13', date: '2025-11-25', time: '20:00', available: true },
-      { id: 's14', date: '2025-11-26', time: '20:00', available: true }
-    ],
-    description: 'První filmová adaptace Drákuly',
-    country: 'Německo',
-    language: 'Němý film s hudbou'
-  },
-  {
-    id: '6',
-    title: 'THE KID',
-    subtitle: 'CHARLES CHAPLIN',
-    year: '1921',
-    duration: '68 MIN',
-    image: 'https://images.unsplash.com/photo-1489599735734-79b4d4c4b5c8?ixlib=rb-4.1.0&q=80&w=1080',
-    showtimes: [
-      { id: 's15', date: '2025-11-25', time: '17:30', available: true },
-      { id: 's16', date: '2025-11-26', time: '20:30', available: true }
-    ],
-    description: 'Dobrodružství tuláka a sirotka',
-    country: 'USA',
-    language: 'Němý film s hudbou'
-  },
-  {
-    id: '7',
-    title: 'THE JAZZ SINGER',
-    subtitle: 'ALAN CROSLAND',
-    year: '1927',
-    duration: '88 MIN',
-    image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1080',
-    showtimes: [
-      { id: 's17', date: '2025-11-25', time: '19:00', available: true },
-      { id: 's18', date: '2025-11-26', time: '21:00', available: true }
-    ],
-    description: 'První zvukový film v historii',
-    country: 'USA',
-    language: 'Angličtina'
-  },
-  {
-    id: '8',
-    title: 'THE GENERAL',
-    subtitle: 'BUSTER KEATON',
-    year: '1926',
-    duration: '67 MIN',
-    image: 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=1080',
-    showtimes: [
-      { id: 's19', date: '2025-11-25', time: '18:00', available: true },
-      { id: 's20', date: '2025-11-26', time: '19:00', available: true }
-    ],
-    description: 'Komedie o vlaku a občanské válce',
-    country: 'USA',
-    language: 'Němý film s hudbou'
+// DB tvar z backendu
+type FilmDbRow = {
+  id: number;
+  title: string;
+  director: string;
+  year: number;
+  country: string;
+  language: string;
+  description: string;
+  length_min: number;
+  age_limit: number;
+  genre: string;
+  awards: string | null;
+  avg_rating: string;
+};
+
+async function apiFetch(path: string, init: RequestInit = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: 'include',
+    ...init,
+  });
+
+  if (!res.ok) {
+    let msg = res.statusText;
+    try {
+      const j = await res.json();
+      msg = j.error || j.message || msg;
+    } catch {}
+    throw new Error(`${res.status} ${msg}`);
   }
-];
 
-/**
- * Načtení všech filmů z databáze
- */
+  return res.json();
+}
+
+// fallback obrázek (než budeš mít v DB sloupec s posterem)
+const fallbackImage =
+  'https://images.unsplash.com/photo-1489599735734-79b4d4c4b5c8?ixlib=rb-4.1.0&q=80&w=1080';
+
+function mapDbFilmToUi(row: FilmDbRow): Film {
+  return {
+    id: String(row.id),
+    title: row.title,
+    // UI teď používá subtitle jako “režisér” (lepší než mít prázdné)
+    subtitle: row.director,
+    year: String(row.year),
+    duration: `${row.length_min} MIN`,
+    image: fallbackImage,
+
+    description: row.description,
+    country: row.country,
+    language: row.language,
+
+    // FilmCard čeká awards jako string[] (u tebe v mocku)
+    awards: row.awards ? row.awards.split(',').map(s => s.trim()).filter(Boolean) : [],
+
+    // rating / reviewCount používáš v mocku, tak ať to UI má
+    rating: Number(row.avg_rating) || 0,
+    reviewCount: 0,
+
+    // showtimes zatím nemáš napojené → nech prázdné
+    showtimes: [] as Showtime[],
+  };
+}
+
 export const getFilms = async (): Promise<Film[]> => {
   if (USE_MOCK_DATA) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return mockFilms;
+    // necháš-li mock, vrať mock (nebo ho smaž)
+    return [];
   }
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.FILMS}`, {
-      method: 'GET',
-      headers: getApiHeaders(),
-    });
-
-    if (!response.ok) {
-      return handleApiError(response);
-    }
-
-    const data = await response.json();
-    return data.films || data;
-  } catch (error) {
-    console.error('Error fetching films:', error);
-    // Fallback na mock data při chybě
-    return mockFilms;
-  }
+  const rows = (await apiFetch(API_ENDPOINTS.FILMS)) as FilmDbRow[];
+  return rows.map(mapDbFilmToUi);
 };
 
-/**
- * Načtení detailu filmu podle ID
- */
+// zatím bez backendu pro detail → jednoduše dohledáme ve všech filmech
 export const getFilmById = async (id: string): Promise<Film | null> => {
-  if (USE_MOCK_DATA) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return mockFilms.find(film => film.id === id) || null;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.FILM_BY_ID(id)}`, {
-      method: 'GET',
-      headers: getApiHeaders(),
-    });
-
-    if (!response.ok) {
-      return handleApiError(response);
-    }
-
-    const data = await response.json();
-    return data.film || data;
-  } catch (error) {
-    console.error('Error fetching film:', error);
-    // Fallback na mock data
-    return mockFilms.find(film => film.id === id) || null;
-  }
+  const films = await getFilms();
+  return films.find(f => f.id === id) || null;
 };
 
-/**
- * Načtení promítání pro konkrétní film
- */
-export const getFilmShowtimes = async (filmId: string): Promise<Showtime[]> => {
-  if (USE_MOCK_DATA) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const film = mockFilms.find(f => f.id === filmId);
-    return film?.showtimes || [];
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SHOWTIMES(filmId)}`, {
-      method: 'GET',
-      headers: getApiHeaders(),
-    });
-
-    if (!response.ok) {
-      return handleApiError(response);
-    }
-
-    const data = await response.json();
-    return data.showtimes || data;
-  } catch (error) {
-    console.error('Error fetching showtimes:', error);
-    const film = mockFilms.find(f => f.id === filmId);
-    return film?.showtimes || [];
-  }
+// showtimes zatím nemáš implementované v PHP → prázdné
+export const getFilmShowtimes = async (_filmId: string): Promise<Showtime[]> => {
+  return [];
 };

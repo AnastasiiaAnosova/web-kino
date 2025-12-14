@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -131,9 +133,7 @@
   }
 }
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
+
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 {
@@ -184,11 +184,7 @@ html {
   font-size: var(--font-size);
 }
 
-/* Graphite Kinematograf Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-
 :root {
-  /* Cinema theme colors */
   --color-cinema-primary: #912D3C;
   --color-cinema-primary-hover: #A43D4C;
   --color-cinema-primary-light: rgba(145, 45, 60, 0.2);
@@ -197,7 +193,6 @@ html {
   --color-cinema-black: #000000;
   --color-cinema-white: #ffffff;
   
-  /* Gray shades */
   --color-cinema-gray-50: #fafafa;
   --color-cinema-gray-100: #f5f5f5;
   --color-cinema-gray-150: #f9f9f9;
@@ -211,12 +206,10 @@ html {
   --color-cinema-gray-900: #171717;
   --color-cinema-gray-950: #111111;
   
-  /* Typography */
   --font-cinema-display: 'Oswald', sans-serif;
   --font-cinema-serif: 'Playfair Display', serif;
 }
 
-/* Typography utilities */
 .font-display {
   font-family: var(--font-cinema-display);
 }
@@ -225,7 +218,6 @@ html {
   font-family: var(--font-cinema-serif);
 }
 
-/* Animation utilities */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -303,13 +295,11 @@ html {
   background: var(--color-cinema-primary-hover);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-cinema-primary) var(--color-cinema-gray-100);
 }
 
-/* Utility classes */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -320,7 +310,6 @@ html {
   min-height: 100vh;
 }
 
-/* Seat styles for reservation */
 .seat {
   width: 32px;
   height: 32px;
