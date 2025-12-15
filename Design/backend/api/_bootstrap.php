@@ -1,7 +1,5 @@
 <?php
 // backend/api/_bootstrap.php
-
-// 1. Настройки CORS (чтобы React не ругался)
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
     header('Access-Control-Allow-Credentials: true');
@@ -18,10 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 2. Подключаем твою базу данных (где лежит функция getConnection)
 require_once __DIR__ . '/../config/database.php';
 
-// 3. Старт сессии
 if (session_status() === PHP_SESSION_NONE) {
     session_name('webkino_session');
     session_set_cookie_params([
@@ -34,12 +30,23 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 4. CSRF защита
+$timeout_duration = 1200; 
+if (isset($_SESSION['LAST_ACTIVITY'])) {
+    if ((time() - $_SESSION['LAST_ACTIVITY']) > $timeout_duration) {
+        session_unset();
+        session_destroy();
+        http_response_code(401);
+        echo json_encode(['error' => 'session_expired', 'message' => 'Relace vypršela (20 min)']);
+        exit;
+    }
+}
+
+$_SESSION['LAST_ACTIVITY'] = time();
+
 if (empty($_SESSION['csrf'])) {
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
 
-// 5. Вспомогательные функции
 function jsonInput(): array {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw ?: '', true);

@@ -22,6 +22,8 @@ export interface Showtime {
   available: boolean;
   price?: number;
   hallId?: number;
+  capacity?: number; 
+  occupiedCount?: number;
 }
 
 // Review types

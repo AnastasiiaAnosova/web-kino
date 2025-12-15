@@ -35,13 +35,12 @@ try {
     $_SESSION['user_id'] = (int)$user['id_uzivatel'];
     $_SESSION['role'] = $user['role'];
 
-    // Формируем ответ для React
     $frontendUser = [
         'id' => $user['id_uzivatel'],
         'firstName' => $user['jmeno'],
         'lastName' => $user['prijmeni'],
         'email' => $user['email'],
-        'phone' => $user['telefon'], // Просто берем из базы
+        'phone' => $user['telefon'], 
         'role' => $user['role'],
         'gender' => $user['pohlavi'],
         'avatar' => $user['profilove_foto']
