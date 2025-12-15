@@ -25,7 +25,7 @@ async function apiFetch(path: string, init: RequestInit = {}) {
 
 export async function getCsrf(): Promise<string> {
   const j = await apiFetch(API_ENDPOINTS.CSRF);
-  return j.token;
+  return j.token || j.csrf_token;
 }
 
 export const getCurrentUser = (): User | null => {
@@ -49,7 +49,14 @@ export const logout = async (): Promise<void> => {
 export const login = async (loginValue: string, password: string): Promise<User> => {
   if (USE_MOCK_DATA) throw new Error('Mock mode is on');
 
-  const csrf = await getCsrf();
+  // const csrf = await getCsrf();
+  let csrf = '';
+  try {
+     const csrfData = await apiFetch(API_ENDPOINTS.CSRF);
+     csrf = csrfData.token;
+  } catch (e) {
+     console.warn('Failed to fetch CSRF token', e);
+  }
 
   try {
     const data = await apiFetch(API_ENDPOINTS.LOGIN, {
@@ -65,7 +72,6 @@ export const login = async (loginValue: string, password: string): Promise<User>
     setCurrentUser(user);
     return user;
   } catch (e: any) {
-    // tady bude např. "401 invalid_credentials"
     if (typeof e?.message === 'string' && e.message.includes('401')) {
       throw new Error('invalid_credentials');
     }
@@ -73,11 +79,54 @@ export const login = async (loginValue: string, password: string): Promise<User>
   }
 };
 
-// aby projekt nespadl – zatím stub (později doplníme podle register.php)
-export const register = async (_userData: any): Promise<User> => {
-  throw new Error('register not implemented yet');
+export const register = async (userData: any): Promise<User> => {
+  if (USE_MOCK_DATA) throw new Error('Mock mode is on');
+  let csrf = '';
+  try {
+     const csrfData = await apiFetch(API_ENDPOINTS.CSRF);
+     csrf = csrfData.token;
+  } catch (e) {
+     console.warn('Failed to fetch CSRF token', e);
+  }
+  const data = await apiFetch(API_ENDPOINTS.REGISTER, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+      },
+      body: JSON.stringify(userData)
+  });
+  const user = data.user as User;
+  setCurrentUser(user);
+  return user;
 };
 
-export const updateProfile = async (_userData: Partial<User>): Promise<User> => {
-  throw new Error('updateProfile not implemented yet');
+export const updateProfile = async (userData: Partial<User> & { password?: string }): Promise<User> => {
+  if (USE_MOCK_DATA) throw new Error('Mock mode is on');
+
+  // 1. Получаем токен
+  let csrf = '';
+  try {
+     const csrfData = await apiFetch(API_ENDPOINTS.CSRF);
+     csrf = csrfData.token;
+  } catch (e) {
+     console.warn('Failed to fetch CSRF token', e);
+  }
+
+  // 2. Отправляем запрос на обновление
+  const data = await apiFetch(API_ENDPOINTS.UPDATE_PROFILE, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+      },
+      body: JSON.stringify(userData)
+  });
+
+  // 3. Обновляем локальное хранилище (чтобы при обновлении страницы данные не терялись)
+  const updatedUser = data.user as User;
+  setCurrentUser(updatedUser);
+  
+  return updatedUser;
 };
+

@@ -57,9 +57,9 @@ export const FilmCard = ({ film, onBookClick }: FilmCardProps) => {
             </span>
           </div>
 
-          <p className="font-serif text-sm text-gray-700 mb-4">
+          {/* <p className="font-serif text-sm text-gray-700 mb-4">
             {film.description}
-          </p>
+          </p> */}
 
           {/* Showtimes */}
           {film.showtimes && film.showtimes.length > 0 && (

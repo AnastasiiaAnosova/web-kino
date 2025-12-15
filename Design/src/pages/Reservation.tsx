@@ -6,7 +6,7 @@ import { DecorativeCurtain } from '../components/layout/DecorativeCurtain';
 import { SeatMap } from '../components/reservation/SeatMap';
 import { ReservationSummary } from '../components/reservation/ReservationSummary';
 import { FilmSelectionModal } from '../components/reservation/FilmSelectionModal';
-import { getFilms } from '../api/films';
+import { getFilms, getFilmShowtimes } from '../api/films';
 import { getOccupiedSeats, createReservation } from '../api/reservations';
 import { Film, Showtime, Seat, BookingState } from '../types';
 
@@ -20,6 +20,7 @@ export const Reservation = () => {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<'selection' | 'details'>('selection');
+  const [showtimes, setShowtimes] = useState<Showtime[]>([]);
   
   const [bookingState, setBookingState] = useState<BookingState>({
     selectedFilmId: null,
@@ -35,9 +36,7 @@ export const Reservation = () => {
   });
 
   const selectedFilm = films.find(f => f.id === bookingState.selectedFilmId) || null;
-  const selectedShowtime = selectedFilm?.showtimes.find(
-    s => s.id === bookingState.selectedShowtimeId
-  ) || null;
+  const selectedShowtime = showtimes.find(s => s.id === bookingState.selectedShowtimeId) || null;
   const totalPrice = bookingState.selectedSeats.length * STANDARD_PRICE;
 
   useEffect(() => {
@@ -68,6 +67,24 @@ export const Reservation = () => {
       initializeSeats();
     }
   }, [bookingState.selectedShowtimeId]);
+
+  useEffect(() => {
+  const loadShowtimes = async () => {
+    if (!bookingState.selectedFilmId) {
+      setShowtimes([]);
+      return;
+    }
+    try {
+      const data = await getFilmShowtimes(bookingState.selectedFilmId);
+      setShowtimes(data);
+    } catch (e) {
+      console.error('Error loading showtimes:', e);
+      setShowtimes([]);
+    }
+  };
+
+  loadShowtimes();
+}, [bookingState.selectedFilmId]);
 
   const initializeSeats = async () => {
     const allSeats: Seat[] = [];
@@ -264,7 +281,7 @@ export const Reservation = () => {
                 {/* Showtime selection */}
                 {bookingState.selectedFilmId && (
                   <ShowtimeSelectionCard 
-                    showtimes={selectedFilm?.showtimes || []}
+                    showtimes={showtimes}
                     selectedShowtimeId={bookingState.selectedShowtimeId}
                     onShowtimeSelect={handleShowtimeSelect}
                   />
@@ -407,41 +424,51 @@ const ShowtimeSelectionCard = ({ showtimes, selectedShowtimeId, onShowtimeSelect
     <div className="absolute -bottom-2 -left-2 w-4 h-4 border-2 border-[#912D3C]/40 transform rotate-45 z-10" />
 
     <div className="absolute -inset-1 bg-gradient-to-r from-[#912D3C]/50 to-[#912D3C] transform -rotate-1 z-0" />
-    
+
     <div className="relative z-10 bg-white border-4 border-black p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-1 h-8 bg-[#912D3C]" />
-          <h3 className="text-lg tracking-widest">TERMÍN PROMITNUTÍ</h3>
+          <h3 className="text-lg tracking-widest">TERMÍN PROMÍTNUTÍ</h3>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {showtimes.map((showtime: Showtime) => (
-          <div
-            key={showtime.id}
-            onClick={() => onShowtimeSelect(showtime.id)}
-            className={`p-4 border-2 cursor-pointer transition-all ${
-              selectedShowtimeId === showtime.id
-                ? 'border-[#912D3C] bg-[#912D3C]/5 shadow-lg'
-                : 'border-gray-300 hover:border-[#912D3C]/50 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <p className="text-xs text-gray-600 mb-1">{new Date(showtime.date).toLocaleDateString('cs-CZ')}</p>
-                <p className="text-lg tracking-wider font-display">{showtime.time}</p>
+
+      {(!showtimes || showtimes.length === 0) ? (
+        <div className="p-6 text-center">
+          <p className="font-serif text-gray-600 italic">Brzy v programu</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {showtimes.map((showtime: Showtime) => (
+            <div
+              key={showtime.id}
+              onClick={() => onShowtimeSelect(showtime.id)}
+              className={`p-4 border-2 cursor-pointer transition-all ${
+                selectedShowtimeId === showtime.id
+                  ? 'border-[#912D3C] bg-[#912D3C]/5 shadow-lg'
+                  : 'border-gray-300 hover:border-[#912D3C]/50 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">
+                    {new Date(showtime.date).toLocaleDateString('cs-CZ')}
+                  </p>
+                  <p className="text-lg tracking-wider font-display">{showtime.time}</p>
+                </div>
+
+                {selectedShowtimeId === showtime.id && (
+                  <Check className="w-5 h-5 text-[#912D3C]" strokeWidth={3} />
+                )}
               </div>
-              {selectedShowtimeId === showtime.id && (
-                <Check className="w-5 h-5 text-[#912D3C]" strokeWidth={3} />
-              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 );
+
 
 // Seat Selection Component
 const SeatSelectionCard = ({ seats, onSeatClick }: any) => (

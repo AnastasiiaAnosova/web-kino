@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   CSRF: '/api/csrf.php',
   LOGIN: '/api/login.php',
   REGISTER: '/api/register.php',
+  UPDATE_PROFILE: '/api/update_profile.php',
   LOGOUT: '/api/logout.php',
 
   FILMS: '/api/films.php',

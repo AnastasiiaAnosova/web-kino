@@ -16,10 +16,16 @@ export interface Film {
 }
 
 export interface Showtime {
+  // id: string;
+  // date: string;
+  // time: string;
+  // available: boolean;
   id: string;
   date: string;
   time: string;
   available: boolean;
+  price?: number;
+  hallId?: number;
 }
 
 // Review types
@@ -79,4 +85,12 @@ export interface Seat {
   row: string;
   number: number;
   status: SeatStatus;
+}
+
+export interface Screening {
+  id: number;
+  date: string; 
+  time: string;
+  cena: number;
+  id_sal: number;
 }
