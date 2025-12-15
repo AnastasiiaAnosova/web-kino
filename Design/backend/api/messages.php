@@ -2,7 +2,6 @@
 // backend/api/messages.php
 require_once __DIR__.'/_bootstrap.php';
 
-// Проверка авторизации (сообщения только для вошедших)
 if (empty($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['error' => 'unauthorized']);
@@ -13,13 +12,11 @@ $userId = $_SESSION['user_id'];
 $pdo = getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
-// === GET: Получение списка сообщений или счетчика ===
 if ($method === 'GET') {
     $type = $_GET['type'] ?? 'inbox'; // 'inbox', 'sent', 'unread_count'
 
     try {
         if ($type === 'unread_count') {
-            // Получить количество непрочитанных для колокольчика
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM zpravy WHERE id_prijemce = ? AND precteno = 0");
             $stmt->execute([$userId]);
             $count = $stmt->fetchColumn();
@@ -28,7 +25,6 @@ if ($method === 'GET') {
         }
 
         if ($type === 'inbox') {
-            // Входящие (кто мне писал)
             $sql = "
                 SELECT z.*, 
                        u.username as other_username, 
@@ -41,7 +37,6 @@ if ($method === 'GET') {
                 ORDER BY z.datum DESC
             ";
         } else {
-            // Отправленные (komu я писал)
             $sql = "
                 SELECT z.*, 
                        u.username as other_username, 
@@ -59,7 +54,6 @@ if ($method === 'GET') {
         $stmt->execute([$userId]);
         $messages = $stmt->fetchAll();
 
-        // Форматируем для JS
         $output = array_map(function($msg) {
             return [
                 'id' => $msg['id_zprava'],
@@ -84,7 +78,6 @@ if ($method === 'GET') {
     exit;
 }
 
-// === POST: Отправка сообщения ===
 if ($method === 'POST') {
     csrfCheckOrFail();
     $in = jsonInput();
@@ -95,29 +88,27 @@ if ($method === 'POST') {
 
     if (!$recipientUsername || !$subject || !$text) {
         http_response_code(400);
-        echo json_encode(['error' => 'Vyplňte všechna pole']); // Заполните все поля
+        echo json_encode(['error' => 'Vyplňte všechna pole']); 
         exit;
     }
 
     try {
-        // 1. Ищем ID получателя по username
         $stmt = $pdo->prepare("SELECT id_uzivatel FROM uzivatele WHERE username = ?");
         $stmt->execute([$recipientUsername]);
         $recipientId = $stmt->fetchColumn();
 
         if (!$recipientId) {
             http_response_code(404);
-            echo json_encode(['error' => 'Uživatel nenalezen']); // Пользователь не найден
+            echo json_encode(['error' => 'Uživatel nenalezen']); 
             exit;
         }
 
         if ($recipientId == $userId) {
             http_response_code(400);
-            echo json_encode(['error' => 'Nemůžete poslat zprávu sami sobě']); // Нельзя писать самому себе
+            echo json_encode(['error' => 'Nemůžete poslat zprávu sami sobě']); 
             exit;
         }
 
-        // 2. Отправляем
         $stmt = $pdo->prepare("INSERT INTO zpravy (id_odesilatel, id_prijemce, predmet, text, datum) VALUES (?, ?, ?, ?, NOW())");
         $stmt->execute([$userId, $recipientId, $subject, $text]);
 
@@ -130,23 +121,19 @@ if ($method === 'POST') {
     exit;
 }
 
-// === PATCH: Пометить как прочитанное ===
 if ($method === 'PATCH') {
     $in = jsonInput();
     $msgId = $in['id'] ?? null;
 
     if (!$msgId) exit;
 
-    // Обновляем только если я получатель
     $stmt = $pdo->prepare("UPDATE zpravy SET precteno = 1 WHERE id_zprava = ? AND id_prijemce = ?");
     $stmt->execute([$msgId, $userId]);
     
-    // Пересчитываем общее кол-во сообщений у юзера (для точности)
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM zpravy WHERE id_prijemce = ? AND precteno = 0");
     $stmt->execute([$userId]);
     $unreadCount = $stmt->fetchColumn();
     
-    // Обновляем счетчик в таблице юзеров (чтобы синхронизировать с реальным кол-вом непрочитанных)
     $stmt = $pdo->prepare("UPDATE uzivatele SET pocet_zprav = ? WHERE id_uzivatel = ?");
     $stmt->execute([$unreadCount, $userId]);
 

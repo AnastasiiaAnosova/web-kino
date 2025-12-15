@@ -5,7 +5,6 @@ require_once __DIR__.'/_bootstrap.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $pdo = getConnection();
 
-// === GET: Получение отзывов ===
 if ($method === 'GET') {
     $filmId = $_GET['film_id'] ?? null;
     if (!$filmId) {
@@ -15,7 +14,6 @@ if ($method === 'GET') {
 
     $currentUserId = $_SESSION['user_id'] ?? 0;
 
-    // Выбираем отзывы
     $sql = "
         SELECT 
             r.id_recenze, r.komentar, r.pocet_like, r.pocet_dislike, r.datum_vytvoreni, r.parent_id,
@@ -34,18 +32,15 @@ if ($method === 'GET') {
         $stmt->execute([$currentUserId, $filmId]);
         $allReviews = $stmt->fetchAll();
 
-        // Карта для быстрого поиска по ID
         $reviewsMap = [];
         $rootReviews = [];
 
-        // 1. Формируем красивые объекты
         foreach ($allReviews as $row) {
             $review = [
                 'id' => (int)$row['id_recenze'],
                 'author' => $row['jmeno'] . ' ' . $row['prijmeni'],
                 'avatar' => $row['profilove_foto'],
                 'rating' => $row['user_rating'] ? (int)$row['user_rating'] : 0,
-                // Если дата вдруг NULL, берем текущую
                 'date' => $row['datum_vytvoreni'] ? date('Y-m-d', strtotime($row['datum_vytvoreni'])) : date('Y-m-d'),
                 'text' => $row['komentar'],
                 'likes' => (int)$row['pocet_like'],
@@ -56,7 +51,6 @@ if ($method === 'GET') {
             $reviewsMap[$row['id_recenze']] = $review;
         }
 
-        // 2. Строим дерево
         foreach ($allReviews as $row) {
             $parentId = $row['parent_id'];
             $currentId = $row['id_recenze'];
@@ -68,7 +62,6 @@ if ($method === 'GET') {
             }
         }
 
-        // 3. Собираем финальный список
         $finalOutput = [];
         foreach ($rootReviews as $id) {
             $finalOutput[] = $reviewsMap[$id];
@@ -83,7 +76,6 @@ if ($method === 'GET') {
     exit;
 }
 
-// === POST: Добавление отзыва ===
 if ($method === 'POST') {
     if (empty($_SESSION['user_id'])) {
         http_response_code(401);
