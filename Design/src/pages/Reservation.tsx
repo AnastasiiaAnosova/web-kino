@@ -577,10 +577,6 @@ const CustomerDetailsForm = ({
                   <span className="text-gray-600">Sedadla:</span>
                   <span className="tracking-wider">{selectedSeats.join(', ')}</span>
                 </div>
-                <div className="flex justify-between pb-2 border-b border-gray-200">
-                  <span className="text-gray-600">Cena za lístek:</span>
-                  <span className="tracking-wider">{unitPrice} Kč</span>
-                </div>
                 <div className="flex justify-between items-center bg-[#912D3C] text-white p-3 -mx-6 -mb-6">
                   <span className="text-sm tracking-widest">CELKEM:</span>
                   <span className="text-xl tracking-widest">{totalPrice} Kč</span>

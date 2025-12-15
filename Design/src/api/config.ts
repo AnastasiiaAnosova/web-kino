@@ -15,7 +15,10 @@ export const API_ENDPOINTS = {
   LIKE_REVIEW: (reviewId: number) => `/api/likes.php`,
   
   SHOWTIMES: (filmId: string) => `/api/screenings.php?film_id=${filmId}`,
-  SEATS: (promitnutiId: string) => `/api/seats.php?promitnuti_id=${promitnutiId}`,
+  
+  // ИСПРАВЛЕНО: Добавили правильный endpoint для занятых мест
+  GET_OCCUPIED_SEATS: (showtimeId: string) => `/api/seats.php?promitnuti_id=${showtimeId}`,
+  
   RESERVE_GUEST: '/api/reserve_guest.php',
 } as const;
 
