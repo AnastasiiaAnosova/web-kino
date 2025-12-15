@@ -1,7 +1,5 @@
 // src/api/config.ts
 export const USE_MOCK_DATA = false;
-
-// když použiješ Vite proxy, BASE_URL je prázdné
 export const API_BASE_URL = '';
 
 export const API_ENDPOINTS = {
@@ -10,8 +8,12 @@ export const API_ENDPOINTS = {
   REGISTER: '/api/register.php',
   UPDATE_PROFILE: '/api/update_profile.php',
   LOGOUT: '/api/logout.php',
-
   FILMS: '/api/films.php',
+
+  REVIEWS: (filmId: string) => `/api/reviews.php?film_id=${filmId}`,
+  ADD_REVIEW: '/api/reviews.php',
+  LIKE_REVIEW: (reviewId: number) => `/api/likes.php`,
+  
   SHOWTIMES: (filmId: string) => `/api/screenings.php?film_id=${filmId}`,
   SEATS: (promitnutiId: string) => `/api/seats.php?promitnuti_id=${promitnutiId}`,
   RESERVE_GUEST: '/api/reserve_guest.php',

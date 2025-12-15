@@ -16,10 +16,6 @@ export interface Film {
 }
 
 export interface Showtime {
-  // id: string;
-  // date: string;
-  // time: string;
-  // available: boolean;
   id: string;
   date: string;
   time: string;

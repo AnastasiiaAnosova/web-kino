@@ -73,11 +73,11 @@ export const getFilmShowtimes = async (filmId: string): Promise<Showtime[]> => {
 
   // map DB → UI Showtime
   return rows.map((r) => ({
-    id: String(r.id),
-    date: r.date,
-    time: r.time,
-    available: true,
-    price: r.cena,
-    hallId: r.id_sal,
+  id: String(r.id),
+  date: r.date,
+  time: r.time,
+  available: true,
+  price: Number((r as any).cena),
+  hallId: Number((r as any).id_sal),
   }));
 }

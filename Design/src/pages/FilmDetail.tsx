@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, User, Star } from 'lucide-react';
 import { DecorativeHeader } from '../components/layout/DecorativeHeader';
 import { getFilmById } from '../api/films';
-import { getReviews, addReview, addReply } from '../api/reviews';
+// <--- !!! 1. ДОБАВИЛ ИМПОРТ likeReview и dislikeReview
+import { getReviews, addReview, addReply, likeReview, dislikeReview } from '../api/reviews';
 import { Film, Review, Reply } from '../types';
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ReviewItem } from '../components/reviews/ReviewItem';
@@ -61,33 +62,41 @@ export const FilmDetail = () => {
       setReviews([newReview, ...reviews]);
     } catch (error) {
       console.error('Error adding review:', error);
+      alert('Chyba při odesílání recenze');
     }
   };
 
-  const handleReplyToReview = async (reviewId: number, text: string, author: string) => {
+  // <--- !!! 2. ДОБАВИЛ ФУНКЦИИ ЛАЙКОВ И ДИЗЛАЙКОВ (ВСТАВИТЬ СЮДА)
+  const handleLike = async (reviewId: number) => {
+    if (!id) return;
     try {
-      await addReply(reviewId, text);
-      
-      // Update reviews locally
-      const newReply: Reply = {
-        id: Date.now(),
-        author,
-        date: new Date().toISOString().split('T')[0],
-        text,
-        likes: 0,
-        dislikes: 0,
-        replies: []
-      };
+      await likeReview(reviewId);
+      // После лайка обновляем список отзывов, чтобы увидеть новые цифры
+      const updatedReviews = await getReviews(id);
+      setReviews(updatedReviews);
+    } catch (error) {
+      console.error('Error liking review:', error);
+    }
+  };
 
-      setReviews(reviews.map(review => {
-        if (review.id === reviewId) {
-          return {
-            ...review,
-            replies: [...(review.replies || []), newReply]
-          };
-        }
-        return review;
-      }));
+  const handleDislike = async (reviewId: number) => {
+    if (!id) return;
+    try {
+      await dislikeReview(reviewId);
+      const updatedReviews = await getReviews(id);
+      setReviews(updatedReviews);
+    } catch (error) {
+      console.error('Error disliking review:', error);
+    }
+  };
+  // <--- КОНЕЦ ВСТАВКИ
+
+  const handleReplyToReview = async (reviewId: number, text: string, author: string) => {
+    if (!id) return;
+    try {
+      await addReply(id, reviewId, text);
+      const updatedReviews = await getReviews(id);
+      setReviews(updatedReviews);
     } catch (error) {
       console.error('Error adding reply:', error);
       alert('Chyba při přidávání odpovědi');
@@ -95,38 +104,12 @@ export const FilmDetail = () => {
   };
 
   const handleReplyToNestedReply = async (reviewId: number, parentReplyId: number, text: string, author: string) => {
+    if (!id) return;
     try {
-      await addReply(reviewId, text, parentReplyId);
+      await addReply(id, parentReplyId, text);
       
-      // Update reviews locally with nested reply
-      const newNestedReply: Reply = {
-        id: Date.now(),
-        author,
-        date: new Date().toISOString().split('T')[0],
-        text,
-        likes: 0,
-        dislikes: 0,
-        replies: []
-      };
-
-      setReviews(reviews.map(review => {
-        if (review.id === reviewId) {
-          const updatedReplies = review.replies?.map(reply => {
-            if (reply.id === parentReplyId) {
-              return {
-                ...reply,
-                replies: [...(reply.replies || []), newNestedReply]
-              };
-            }
-            return reply;
-          });
-          return {
-            ...review,
-            replies: updatedReplies
-          };
-        }
-        return review;
-      }));
+      const updatedReviews = await getReviews(id);
+      setReviews(updatedReviews);
     } catch (error) {
       console.error('Error adding nested reply:', error);
       alert('Chyba při přidávání odpovědi');
@@ -321,7 +304,15 @@ export const FilmDetail = () => {
                   </div>
                 ) : (
                   reviews.map(review => (
-                    <ReviewItem key={review.id} review={review} onReply={handleReplyToReview} onReplyToReply={handleReplyToNestedReply} />
+                    <ReviewItem 
+                      key={review.id} 
+                      review={review} 
+                      // <--- !!! 3. ЗДЕСЬ Я ПЕРЕДАЛ НОВЫЕ ПРОПСЫ (onLike, onDislike)
+                      onLike={() => handleLike(review.id)}
+                      onDislike={() => handleDislike(review.id)}
+                      onReply={handleReplyToReview} 
+                      onReplyToReply={handleReplyToNestedReply} 
+                    />
                   ))
                 )}
               </div>
