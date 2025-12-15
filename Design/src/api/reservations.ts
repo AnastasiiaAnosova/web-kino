@@ -52,3 +52,25 @@ export const createReservation = async (bookingData: {
     return mockResponse;
   }
 };
+
+export const processPayment = async (reservationId: string | number): Promise<void> => {
+  if (USE_MOCK_DATA) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.PROCESS_PAYMENT}`, {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ reservationId }),
+    });
+
+    if (!response.ok) {
+      return handleApiError(response);
+    }
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    throw error;
+  }
+};

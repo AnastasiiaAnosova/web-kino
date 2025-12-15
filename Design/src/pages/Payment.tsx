@@ -6,6 +6,7 @@ import { Footer } from '../components/layout/Footer';
 import { DecorativeCurtain } from '../components/layout/DecorativeCurtain';
 import { getFilmById } from '../api/films';
 import { Film } from '../types';
+import { processPayment } from '../api/reservations';
 
 const STANDARD_PRICE = 180;
 
@@ -38,14 +39,35 @@ export const Payment = () => {
     loadBookingData();
   }, [navigate]);
 
-  const handlePayment = () => {
+const handlePayment = async () => {
+    // 1. Спрашиваем подтверждение (симуляция шлюза)
     const confirmed = confirm('Přejít k platbě? Po potvrzení budete přesměrováni na platební bránu.');
     
     if (confirmed) {
-      sessionStorage.setItem('bookingPaid', 'true');
-      alert('Platba byla úspěšně zpracována! Děkujeme za vaši rezervaci.');
-      sessionStorage.removeItem('bookingData');
-      navigate('/');
+      try {
+        setLoading(true); // Включаем спинner
+
+        // 2. !!! ОТПРАВЛЯЕМ ЗАПРОС НА БЭКЕНД !!!
+        // bookingData.reservationId мы сохранили в Reservation.tsx
+        if (bookingData?.reservationId) {
+           await processPayment(bookingData.reservationId);
+        } else {
+           console.error("Missing reservation ID");
+           // Можно продолжить даже если ID нет (для тестов), но лучше показать ошибку
+        }
+
+        // 3. Если всё прошло успешно (не вылетела ошибка):
+        sessionStorage.setItem('bookingPaid', 'true');
+        alert('Platba byla úspěšně zpracována a uložena! Děkujeme.');
+        sessionStorage.removeItem('bookingData');
+        navigate('/');
+
+      } catch (error) {
+        console.error("Payment failed", error);
+        alert('Platba se nezdařila. Zkuste to prosím znovu.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

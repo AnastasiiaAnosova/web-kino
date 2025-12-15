@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   UPDATE_PROFILE: '/api/update_profile.php',
   LOGOUT: '/api/logout.php',
   FILMS: '/api/films.php',
+  PROCESS_PAYMENT: '/api/payment.php',
 
   REVIEWS: (filmId: string) => `/api/reviews.php?film_id=${filmId}`,
   ADD_REVIEW: '/api/reviews.php',
