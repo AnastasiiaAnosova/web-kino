@@ -82,8 +82,10 @@ try {
         'user' => [
             'id' => $newId,
             'firstName' => $firstName,
+            'lastName' => $lastName,
             'email' => $email,
             'phone' => $phoneInput,
+            'gender' => $gender,
             'avatar' => $photoUrl,
             'role' => 'user'
         ]
