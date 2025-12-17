@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 csrfCheckOrFail();
 $in = jsonInput();
 
-// Данные
 $firstName = trim((string)($in['firstName'] ?? ''));
 $lastName  = trim((string)($in['lastName'] ?? ''));
 $email     = trim((string)($in['email'] ?? ''));
@@ -28,10 +27,8 @@ if (!$email || strlen($password) < 6 || !$firstName) {
 }
 
 try {
-    // Вызываем ТВОЮ функцию подключения
     $pdo = getConnection();
 
-    // Проверка дубликата
     $stmt = $pdo->prepare("SELECT id_uzivatel FROM uzivatele WHERE email = ? LIMIT 1");
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
@@ -40,7 +37,6 @@ try {
         exit;
     }
 
-    // Сохранение картинки
     $photoUrl = null;
     if ($avatar) {
         $uploadDir = __DIR__ . '/../uploads';
@@ -48,17 +44,13 @@ try {
         
         $fileName = ImageHandler::saveBase64Image($avatar, $uploadDir);
         if ($fileName) {
-            // Укажи здесь правильный путь, как у тебя открывается в браузере
-            // Если через php -S localhost:8000, то:
             $photoUrl = "http://localhost:8000/uploads/" . $fileName;
         }
     }
 
-    // Хэш пароля (обязательно!)
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     $username = explode('@', $email)[0] . rand(100, 999);
 
-    // Запись в базу (телефон пишем как есть, без Crypto)
     $sql = "INSERT INTO uzivatele 
             (jmeno, prijmeni, username, email, telefon, pohlavi, role, heslo, profilove_foto, pocet_zprav) 
             VALUES (?, ?, ?, ?, ?, ?, 'user', ?, ?, 0)";
@@ -69,7 +61,7 @@ try {
         $lastName, 
         $username, 
         $email, 
-        $phone,  // Обычный телефон
+        $phone,
         $gender, 
         $hashedPassword, 
         $photoUrl
