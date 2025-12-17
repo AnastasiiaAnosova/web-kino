@@ -50,11 +50,13 @@ export interface Reply {
 
 // User types
 export interface User {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   gender: 'male' | 'female' | 'other';
+  role: 'user' | 'admin' | 'host';
   password: string;
   avatar: string | null;
   memberSince: string;

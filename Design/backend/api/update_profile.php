@@ -17,7 +17,11 @@ if (empty($_SESSION['user_id'])) {
 csrfCheckOrFail();
 
 $in = jsonInput();
+// Use provided ID if user is admin, else use own session ID
 $userId = $_SESSION['user_id'];
+if (!empty($in['id']) && ($_SESSION['role'] ?? '') === 'admin') {
+    $userId = (int)$in['id'];
+}
 
 $firstName = trim((string)($in['firstName'] ?? ''));
 $lastName  = trim((string)($in['lastName'] ?? ''));
@@ -26,6 +30,7 @@ $phone     = trim((string)($in['phone'] ?? ''));
 $gender    = (string)($in['gender'] ?? 'other');
 $password  = (string)($in['password'] ?? ''); 
 $avatar    = $in['avatar'] ?? null; 
+$role      = (string)($in['role'] ?? 'user');
 
 if (!$email || !$firstName || !$lastName) {
     http_response_code(400);
@@ -78,7 +83,8 @@ try {
         $email, 
         $phone, 
         $gender, 
-        $finalPhotoUrl
+        $finalPhotoUrl,
+        $role,
     ];
 
     if (!empty($password)) {
@@ -95,7 +101,8 @@ try {
             email = ?, 
             telefon = ?, 
             pohlavi = ?, 
-            profilove_foto = ? 
+            profilove_foto = ?,
+            `role` = ?
             $sqlPass
             WHERE id_uzivatel = ?";
 
@@ -111,7 +118,8 @@ try {
             'email' => $email,
             'phone' => $phone,
             'gender' => $gender,
-            'role' => $_SESSION['role'] ?? 'user',
+            //'role' => $_SESSION['role'] ?? 'user',
+            'role' => $role,
             'avatar' => $finalPhotoUrl
         ]
     ]);

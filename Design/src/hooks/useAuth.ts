@@ -37,8 +37,13 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
-    apiLogout();
+  const logout = async () => {
+
+    try {
+        await apiLogout();   // wait until session is destroyed
+    } catch (e) {
+        console.warn('Logout failed', e);
+    }
     setUser(null);
     window.dispatchEvent(new Event('userLogout'));
   };

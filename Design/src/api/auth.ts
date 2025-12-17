@@ -38,11 +38,27 @@ export const setCurrentUser = (user: User): void => {
 };
 
 export const logout = async (): Promise<void> => {
+
+  let csrf = '';
+  try {
+     const csrfData = await apiFetch(API_ENDPOINTS.CSRF);
+     csrf = csrfData.token;
+  } catch (e) {
+     console.warn('Failed to fetch CSRF token', e);
+  }
+
   if (!USE_MOCK_DATA) {
     try {
-      await apiFetch(API_ENDPOINTS.LOGOUT, { method: 'POST' });
+      await apiFetch(API_ENDPOINTS.LOGOUT, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        }
+       });
     } catch {}
   }
+  
   localStorage.removeItem(STORAGE_KEY);
 };
 
@@ -125,7 +141,10 @@ export const updateProfile = async (userData: Partial<User> & { password?: strin
 
   // 3. Обновляем локальное хранилище (чтобы при обновлении страницы данные не терялись)
   const updatedUser = data.user as User;
-  setCurrentUser(updatedUser);
+  const currentUser = getCurrentUser();
+  if(currentUser && updatedUser.id == currentUser.id){
+    setCurrentUser(updatedUser);
+  }
   
   return updatedUser;
 };

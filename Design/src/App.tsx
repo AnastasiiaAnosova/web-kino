@@ -15,6 +15,7 @@ export default function App() {
         <Route path="/reservation" element={<Reservation />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );

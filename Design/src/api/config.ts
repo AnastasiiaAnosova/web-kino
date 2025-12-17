@@ -10,6 +10,9 @@ export const API_ENDPOINTS = {
   LOGOUT: '/api/logout.php',
   FILMS: '/api/films.php',
   PROCESS_PAYMENT: '/api/payment.php',
+  USER_BY_ID: '/api/user_by_id.php',
+  GETTING_USERS: '/api/getting_users.php',
+  DELETE_USER: '/api/delete_user.php',
 
   REVIEWS: (filmId: string) => `/api/reviews.php?film_id=${filmId}`,
   ADD_REVIEW: '/api/reviews.php',

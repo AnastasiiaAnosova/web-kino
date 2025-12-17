@@ -4,7 +4,8 @@ import { ArrowLeft, Camera } from 'lucide-react';
 import { DecorativeHeader } from '../components/layout/DecorativeHeader';
 import { Footer } from '../components/layout/Footer';
 import { DecorativeCurtain } from '../components/layout/DecorativeCurtain';
-import { register, updateProfile, getCurrentUser } from '../api/auth';
+import { register, updateProfile, getCurrentUser, setCurrentUser } from '../api/auth';
+import { getAllUsers, getUserById, deleteUserById } from '../api/get_users';
 import { User } from '../types';
 
 export const Register = () => {
@@ -20,8 +21,13 @@ export const Register = () => {
     gender: 'other' as 'male' | 'female' | 'other',
     password: '',
     confirmPassword: '',
+    role: 'user' as 'user' | 'admin' | 'host'
   });
   
+  const [currentUserData, setCurrentUserData] = useState({} as User);
+  const [selectedUserToChange, setSelectedUserToChange] = useState({} as User);
+  const [usersToChange, setUsersToChange] = useState([] as User[]);
+
   const [avatar, setAvatar] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
@@ -37,8 +43,16 @@ export const Register = () => {
           gender: currentUser.gender,
           password: currentUser.password,
           confirmPassword: currentUser.password,
+          role: currentUser.role,
         });
+        
+        setCurrentUserData(currentUser);
+
+        setSelectedUserToChange(currentUser);
+
         setAvatarPreview(currentUser.avatar);
+
+        getUsersToChange();
       }
     }
   }, [isEditMode]);
@@ -67,12 +81,14 @@ export const Register = () => {
     try {
       if (isEditMode) {
         await updateProfile({
+          id: selectedUserToChange.id,
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
           gender: formData.gender,
           avatar: avatar || avatarPreview,
+          role: formData.role,
         } as Partial<User>);
         
         alert('Profil byl úspěšně aktualizován!');
@@ -85,6 +101,7 @@ export const Register = () => {
           gender: formData.gender,
           password: formData.password,
           avatar: avatar,
+          role: 'user' as 'user' | 'admin' | 'host',
         });
         
         alert('Registrace úspěšná! Budete přesměrováni na hlavní stránku.');
@@ -96,6 +113,53 @@ export const Register = () => {
       alert('Došlo k chybě. Zkuste to prosím znovu.');
     }
   };
+
+  const deleteSelectedUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const confirmed = window.confirm("Chcete opravdu odstranit uživatele " + selectedUserToChange.firstName + " " + selectedUserToChange.lastName + "?");
+    if (!confirmed) return;
+    
+    await deleteUserById(selectedUserToChange.id);
+    navigate('/');
+  }
+
+  const getUsersToChange = () => {
+
+    // Provizorni vyber ze vsech uzivatel
+    const func = async () => {
+      setUsersToChange(await getAllUsers());
+    }
+    
+    func();
+  }
+
+  const isCurrentUserAdmin = () => {
+    return currentUserData.role == "admin";
+  }
+
+  const updateSelectedUserById = async (idStr: string) => {
+
+    const id = parseInt(idStr, 10);
+    if (Number.isNaN(id)) return;
+
+    const user = await getUserById(id);
+
+    console.log("selected user email: " + user.email);
+
+    setSelectedUserToChange(user);
+
+    setFormData({
+          firstName: user.firstName,
+          lastName: user.lastName ?? "",
+          email: user.email ?? "",
+          phone: user.phone ?? "",
+          gender: user.gender ?? "other",
+          password: user.password ?? "",
+          confirmPassword: user.password ?? "",
+          role: user.role ?? "",
+        });
+  }
 
   return (
     <div className="min-h-screen bg-white font-display">
@@ -136,31 +200,58 @@ export const Register = () => {
             <div className="bg-white shadow-2xl rounded-lg p-8 md:p-12 border border-gray-200">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Avatar upload */}
-                <div className="flex justify-center mb-8">
-                  <div className="relative">
-                    <div className="w-32 h-32 rounded-full border-4 border-[#912D3C] overflow-hidden bg-gray-100 shadow-lg">
-                      {avatarPreview ? (
-                        <img 
-                          src={avatarPreview} 
-                          alt="Avatar preview" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <Camera className="w-12 h-12 text-gray-400" />
+                
+                <div className={isCurrentUserAdmin() ? "grid grid-cols-1 md:grid-cols-2 gap-6" : ""}>
+                    {isCurrentUserAdmin() &&
+                        <div className="">
+                        <div className='w-full py-3'>
+                        <label className="block text-sm font-display tracking-wider text-gray-700 mb-2">
+                            UŽIVATEL *
+                        </label>
+                        <select
+                            value={selectedUserToChange.id}
+                            onChange={(e) => updateSelectedUserById(e.target.value as any)}
+                            required
+                            className="bg-white w-full px-4 py-3 border border-gray-300 focus:border-[#912D3C] focus:ring-2 focus:ring-[#912D3C]/20 transition-all font-serif"
+                        >
+                            <option value={currentUserData.id}>Já</option>
+                              { usersToChange.map((user: User) => {
+                                return <option 
+                                        key={user.id} 
+                                        value={user.id}>{user.firstName + " " + (user.lastName || user.id) + ((user.email) ? " (" + user.email + ")" : "")}
+                                        </option>
+                              })}
+                        </select>
                         </div>
-                      )}
+                        </div>
+                    }
+
+                    <div className="flex justify-center mb-8">
+                        <div className="relative">
+                        <div className="w-32 h-32 rounded-full border-4 border-[#912D3C] overflow-hidden bg-gray-100 shadow-lg">
+                            {avatarPreview ? (
+                                <img 
+                                src={avatarPreview} 
+                                alt="Avatar preview" 
+                                className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                <Camera className="w-12 h-12 text-gray-400" />
+                                </div>
+                            )}
+                            </div>
+                            <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#912D3C] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#A43D4C] transition-colors border-2 border-white shadow-md">
+                            <Camera className="w-5 h-5 text-white" />
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                className="hidden"
+                            />
+                            </label>
+                        </div>
                     </div>
-                    <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#912D3C] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#A43D4C] transition-colors border-2 border-white shadow-md">
-                      <Camera className="w-5 h-5 text-white" />
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -233,6 +324,23 @@ export const Register = () => {
                   />
                 </div>
 
+                <div>
+                <label className="block text-sm font-display tracking-wider text-gray-700 mb-2">
+                    ROLE *
+                </label>
+                <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    required
+                    disabled={!isCurrentUserAdmin()}
+                    className={ ((isCurrentUserAdmin()) ? "bg-white " : "bg-gray-200 ") + "w-full px-4 py-3 border border-gray-300 focus:border-[#912D3C] focus:ring-2 focus:ring-[#912D3C]/20 transition-all font-serif"}
+                >
+                    <option value="user">Uživatel</option>
+                    <option value="admin">Admin</option>
+                    <option value="host">Host</option>
+                </select>
+                </div>
+
                 {!isEditMode && (
                   <>
                     <div>
@@ -269,6 +377,15 @@ export const Register = () => {
                 >
                   {isEditMode ? 'ULOŽIT ZMĚNY' : 'VYTVOŘIT ÚČET'}
                 </button>
+
+                {(isCurrentUserAdmin() && isEditMode) && 
+                    <button
+                    onClick={(e) => deleteSelectedUser(e)}
+                    className="w-full bg-[#912D3C] text-white font-display tracking-widest py-4 px-8 text-sm hover:bg-[#A43D4C] transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                    ODSTRANIT ÚČET
+                    </button>
+                }
                 
                 {!isEditMode && (
                   <div className="text-center mt-6">
