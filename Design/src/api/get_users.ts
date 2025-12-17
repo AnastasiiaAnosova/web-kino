@@ -55,7 +55,7 @@ export const getUserById = async (userId: number): Promise<User> => {
   // 1. Get CSRF token
   let csrf = '';
   try {
-    const csrfData = await apiFetch('/api/csrf.php');
+    const csrfData = await apiFetch(API_ENDPOINTS.CSRF);
     csrf = csrfData.token;
   } catch (e) {
     console.warn('Failed to fetch CSRF token', e);
@@ -83,7 +83,7 @@ export const deleteUserById = async (userId: number): Promise<void> => {
   // 1. Get CSRF token
   let csrf = '';
   try {
-    const csrfData = await apiFetch('/api/csrf.php');
+    const csrfData = await apiFetch(API_ENDPOINTS.CSRF);  
     csrf = csrfData.token;
   } catch (e) {
     console.warn('Failed to fetch CSRF token', e);

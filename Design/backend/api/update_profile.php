@@ -2,6 +2,9 @@
 // backend/api/update_profile.php
 require_once __DIR__.'/_bootstrap.php';
 require_once __DIR__.'/../utils/ImageHandler.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -26,7 +29,8 @@ if (!empty($in['id']) && ($_SESSION['role'] ?? '') === 'admin') {
 $firstName = trim((string)($in['firstName'] ?? ''));
 $lastName  = trim((string)($in['lastName'] ?? ''));
 $email     = trim((string)($in['email'] ?? ''));
-$phone     = trim((string)($in['phone'] ?? ''));
+$phoneInput = trim((string)($in['phone'] ?? ''));
+$phone = EncryptionHelper::encrypt($phoneInput, $key);
 $gender    = (string)($in['gender'] ?? 'other');
 $password  = (string)($in['password'] ?? ''); 
 $avatar    = $in['avatar'] ?? null; 
@@ -116,7 +120,7 @@ try {
             'firstName' => $firstName,
             'lastName' => $lastName,
             'email' => $email,
-            'phone' => $phone,
+            'phone' => $phoneInput,
             'gender' => $gender,
             //'role' => $_SESSION['role'] ?? 'user',
             'role' => $role,

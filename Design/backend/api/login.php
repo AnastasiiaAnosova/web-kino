@@ -1,6 +1,9 @@
 <?php
 // backend/api/login.php
 require_once __DIR__.'/_bootstrap.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -40,7 +43,7 @@ try {
         'firstName' => $user['jmeno'],
         'lastName' => $user['prijmeni'],
         'email' => $user['email'],
-        'phone' => $user['telefon'], 
+        'phone' => $user['telefon'] ? EncryptionHelper::decrypt($user['telefon'], $key) : '',
         'role' => $user['role'],
         'gender' => $user['pohlavi'],
         'avatar' => $user['profilove_foto']

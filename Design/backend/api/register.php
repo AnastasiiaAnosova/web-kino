@@ -2,6 +2,9 @@
 // backend/api/register.php
 require_once __DIR__.'/_bootstrap.php';
 require_once __DIR__.'/../utils/ImageHandler.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -15,7 +18,8 @@ $in = jsonInput();
 $firstName = trim((string)($in['firstName'] ?? ''));
 $lastName  = trim((string)($in['lastName'] ?? ''));
 $email     = trim((string)($in['email'] ?? ''));
-$phone     = trim((string)($in['phone'] ?? ''));
+$phoneInput = trim((string)($in['phone'] ?? ''));
+$phone = EncryptionHelper::encrypt($phoneInput, $key);
 $password  = (string)($in['password'] ?? '');
 $gender    = (string)($in['gender'] ?? 'other');
 $avatar    = $in['avatar'] ?? null;
@@ -79,6 +83,7 @@ try {
             'id' => $newId,
             'firstName' => $firstName,
             'email' => $email,
+            'phone' => $phoneInput,
             'avatar' => $photoUrl,
             'role' => 'user'
         ]

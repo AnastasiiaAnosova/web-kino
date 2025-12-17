@@ -52,7 +52,11 @@ export const Register = () => {
 
         setAvatarPreview(currentUser.avatar);
 
-        getUsersToChange();
+        //console.log("upravuje admin: " + isCurrentUserAdmin() + " " + currentUser.role);
+
+        if(currentUser.role == "admin"){
+          getUsersToChange();
+        }
       }
     }
   }, [isEditMode]);
@@ -145,8 +149,6 @@ export const Register = () => {
 
     const user = await getUserById(id);
 
-    console.log("selected user email: " + user.email);
-
     setSelectedUserToChange(user);
 
     setFormData({
@@ -157,7 +159,7 @@ export const Register = () => {
           gender: user.gender ?? "other",
           password: user.password ?? "",
           confirmPassword: user.password ?? "",
-          role: user.role ?? "",
+          role: user.role, // Asi to nema cenu checkovat pro prazdnou roli
         });
   }
 
@@ -229,9 +231,9 @@ export const Register = () => {
                     <div className="flex justify-center mb-8">
                         <div className="relative">
                         <div className="w-32 h-32 rounded-full border-4 border-[#912D3C] overflow-hidden bg-gray-100 shadow-lg">
-                            {avatarPreview ? (
+                            {selectedUserToChange.avatar /*avatarPreview*/ ? (
                                 <img 
-                                src={avatarPreview} 
+                                src={selectedUserToChange.avatar ?? avatarPreview} 
                                 alt="Avatar preview" 
                                 className="w-full h-full object-cover"
                                 />

@@ -1,6 +1,9 @@
 <?php
 // backend/api/get_users.php
 require_once __DIR__.'/_bootstrap.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -18,18 +21,18 @@ csrfCheckOrFail();
 try {
     $pdo = getConnection();
 
-    $stmt = $pdo->query("SELECT id_uzivatel, jmeno, prijmeni, email, telefon, pohlavi, profilove_foto FROM uzivatele");
+    $stmt = $pdo->query("SELECT id_uzivatel, jmeno, prijmeni, email, telefon, pohlavi, role, profilove_foto FROM uzivatele");
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $formattedUsers = array_map(function($u) {
+    $formattedUsers = array_map(function($u) use ($key) {
         return [
             'id' => $u['id_uzivatel'],
             'firstName' => $u['jmeno'],
             'lastName' => $u['prijmeni'],
             'email' => $u['email'],
-            'phone' => $u['telefon'],
+            'phone' => $u['telefon'] ? EncryptionHelper::decrypt($u['telefon'], $key) : '',
             'gender' => $u['pohlavi'],
-            'role' => 'user',
+            'role' => $u['role'],
             'avatar' => $u['profilove_foto'] ?? null,
         ];
     }, $users);

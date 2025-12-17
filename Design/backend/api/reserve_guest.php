@@ -1,6 +1,9 @@
 <?php
 // backend/api/reserve_guest.php
 require_once __DIR__.'/_bootstrap.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -31,7 +34,8 @@ try {
     } else {
         $email = trim($customerData['email'] ?? '');
         $name = trim($customerData['name'] ?? '');
-        $phone = trim($customerData['phone'] ?? '');
+        $phoneInput = trim($customerData['phone'] ?? '');
+        $phone = EncryptionHelper::encrypt($phoneInput, $key);
 
         if (!$email || !$name) {
             throw new Exception("Chybí kontaktní údaje");

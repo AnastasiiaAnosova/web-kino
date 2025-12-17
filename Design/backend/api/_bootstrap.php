@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/env.php'; // Třeba mít ve složce config soubor .env s klíčem ve formátu: APP_ENCRYPTION_KEY=base64keyhere
 
 if (session_status() === PHP_SESSION_NONE) {
     session_name('webkino_session');
