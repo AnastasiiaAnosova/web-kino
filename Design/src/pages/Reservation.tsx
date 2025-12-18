@@ -9,12 +9,15 @@ import { FilmSelectionModal } from '../components/reservation/FilmSelectionModal
 import { getFilms, getFilmShowtimes } from '../api/films';
 import { getOccupiedSeats, createReservation } from '../api/reservations';
 import { Film, Showtime, Seat, BookingState } from '../types';
+import { useAuth } from '../hooks/useAuth';
 
 const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const SEATS_PER_ROW = 10;
 const STANDARD_PRICE = 180;
 
 export const Reservation = () => {
+  
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [films, setFilms] = useState<Film[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
@@ -62,6 +65,15 @@ export const Reservation = () => {
       } finally {
         setLoading(false);
       }
+
+      if(user){
+        setCustomerForm({
+          name: user.firstName + ' ' + user.lastName,
+          email: user.email,
+          phone: user.phone,
+        });
+      }
+
     };
 
     loadFilms();
