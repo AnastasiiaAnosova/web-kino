@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Mail, Phone, Settings, Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getMessages, getUnreadCount } from '../../api/messages';
+import { getMessages, getUnreadCount, Message, markAsRead } from '../../api/messages';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -14,22 +14,37 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-
+  const [usersMessages, setUsersMessages] = useState([] as Message[]);
+  const [currentOpenMessage, setCurrentOpenMessage] = useState(-1);
   
   useEffect(() => {
 
-
       if (!isOpen || !user) return;
 
-      const updateUnreadCount = async () => {
-        setUnreadMessagesCount(await getUnreadCount());
-      }
-
       updateUnreadCount();
+      getUsersMesages();
       
-  }, []);
+  }, [isOpen]);
+
+  // Při změně viditelnosti zpráv
+  useEffect(() => {
+
+    if(showNotifications){
+
+      getUsersMesages();
+    }
+      
+  }, [showNotifications]);
 
   if (!isOpen || !user) return null;
+
+  const getUsersMesages = async () => {
+    setUsersMessages(await getMessages("inbox"));
+  }
+
+  const updateUnreadCount = async () => {
+    setUnreadMessagesCount(await getUnreadCount());
+  }
 
   const handleLogout = () => {
     if (confirm('Opravdu se chcete odhlásit?')) {
@@ -44,17 +59,21 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
     }
   };
 
-  const handleNotificationPanelClick = async (e: React.MouseEvent) => {
+  const handleNotificationPanelClose = async (e: React.MouseEvent) => {
     
-
     setShowNotifications(false);
+
   };
 
-  const getInboxMessages = async () => {
+  const handleMessageClick = async (message: Message) => {
 
-    const messages = await getMessages("inbox");
-    return messages;
+    setCurrentOpenMessage((currentOpenMessage == message.id) ? -1 : message.id);
+    await markAsRead(message.id);
+
+    updateUnreadCount();
+    getUsersMesages();
   }
+
 
   return (
     <div 
@@ -155,16 +174,66 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
             <div className="bg-[#912D3C] p-3 flex justify-between items-center border-b-2 border-black">
               <h4 className="font-display text-sm tracking-wider text-white">OZNÁMENÍ</h4>
               <button
-                onClick={(e) => handleNotificationPanelClick(e)}
+                onClick={(e) => handleNotificationPanelClose(e)}
                 className="w-6 h-6 border border-white text-white hover:bg-white hover:text-[#912D3C] transition-colors flex items-center justify-center"
               >
                 ✕
               </button>
             </div>
             <div className="p-4">
+              {usersMessages.length <= 0 && 
               <p className="font-serif text-sm italic text-gray-500 text-center">
-                Žádná nová oznámení
-              </p>
+                Žádná oznámení
+              </p>}
+              {usersMessages.length > 0 && 
+                usersMessages.map((message) => {
+                  return (
+                    <div key={message.id} className="flex flex-col mb-2">
+                      <div
+                        onClick={() => handleMessageClick(message)}
+                        key={message.id}
+                        className={`flex items-start justify-between gap-3 p-3 mb-2 rounded-md 
+                                    ${!message.isRead ? 'bg-[#fef2f2]' : 'bg-white'} 
+                                    border border-gray-200 hover:border-[#912D3C] transition-colors`}
+                      >
+                        {/* Avatar and sender info */}
+                        <div className="flex items-center gap-3">
+                          {message.otherUser.avatar ? (
+                            <img 
+                              src={message.otherUser.avatar} 
+                              alt={message.otherUser.fullName} 
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-semibold">
+                              {message.otherUser.fullName.charAt(0)}
+                            </div>
+                          )}
+
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-sm text-gray-900">{message.otherUser.fullName}</span>
+                            <span className="font-serif text-xs text-gray-600">{message.subject}</span>
+                          </div>
+                        </div>
+
+                        {/* Date and unread indicator */}
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-gray-400">{new Date(message.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          {!message.isRead && (
+                            <span className="mt-1 w-3 h-3 rounded-full bg-[#912D3C] ring-1 ring-white" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Expandable content */}
+                        {currentOpenMessage == message.id && (
+                          <div className="p-3 bg-gray-50 border-l-2 border-r-2 border-b-2 border-gray-200 rounded-b-md text-sm text-gray-700">
+                            {message.text}
+                          </div>
+                        )}
+                  </div>);
+                })
+              }
             </div>
           </div>
         )}
