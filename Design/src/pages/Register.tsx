@@ -233,7 +233,7 @@ export const Register = () => {
                         <div className="w-32 h-32 rounded-full border-4 border-[#912D3C] overflow-hidden bg-gray-100 shadow-lg">
                             {selectedUserToChange.avatar /*avatarPreview*/ ? (
                                 <img 
-                                src={selectedUserToChange.avatar ?? avatarPreview} 
+                                src={selectedUserToChange.avatar}
                                 alt="Avatar preview" 
                                 className="w-full h-full object-cover"
                                 />

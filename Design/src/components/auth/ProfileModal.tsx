@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Mail, Phone, Settings, Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { getMessages, getUnreadCount } from '../../api/messages';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -9,8 +10,24 @@ interface ProfileModalProps {
 }
 
 export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalProps) => {
+
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
+  
+  useEffect(() => {
+
+
+      if (!isOpen || !user) return;
+
+      const updateUnreadCount = async () => {
+        setUnreadMessagesCount(await getUnreadCount());
+      }
+
+      updateUnreadCount();
+      
+  }, []);
 
   if (!isOpen || !user) return null;
 
@@ -26,6 +43,18 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
       onClose();
     }
   };
+
+  const handleNotificationPanelClick = async (e: React.MouseEvent) => {
+    
+
+    setShowNotifications(false);
+  };
+
+  const getInboxMessages = async () => {
+
+    const messages = await getMessages("inbox");
+    return messages;
+  }
 
   return (
     <div 
@@ -109,6 +138,14 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
             title="Oznámení"
           >
             <Bell className="w-5 h-5" strokeWidth={2} />
+            {unreadMessagesCount > 0 && (
+              <span
+              style={{transform: 'translate(0.2rem, -0.2rem)'}}
+                className="absolute -top-2 -right-2 min-w-[1.25rem] w-6 h-6 px-1 rounded-full bg-[#912D3C] text-white text-xs font-semibold
+                  flex items-center justify-center leading-none ring-2 ring-white border-2 border-white shadow-md">
+                {unreadMessagesCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -118,7 +155,7 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
             <div className="bg-[#912D3C] p-3 flex justify-between items-center border-b-2 border-black">
               <h4 className="font-display text-sm tracking-wider text-white">OZNÁMENÍ</h4>
               <button
-                onClick={() => setShowNotifications(false)}
+                onClick={(e) => handleNotificationPanelClick(e)}
                 className="w-6 h-6 border border-white text-white hover:bg-white hover:text-[#912D3C] transition-colors flex items-center justify-center"
               >
                 ✕
