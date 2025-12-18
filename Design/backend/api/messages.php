@@ -1,6 +1,9 @@
 <?php
 // backend/api/messages.php
 require_once __DIR__.'/_bootstrap.php';
+require_once __DIR__ . '/../utils/EncryptionHelper.php';
+
+$key = $_ENV['APP_ENCRYPTION_KEY'];
 
 if (empty($_SESSION['user_id'])) {
     http_response_code(401);
@@ -54,11 +57,11 @@ if ($method === 'GET') {
         $stmt->execute([$userId]);
         $messages = $stmt->fetchAll();
 
-        $output = array_map(function($msg) {
+        $output = array_map(function($msg) use($key) {
             return [
                 'id' => $msg['id_zprava'],
-                'subject' => $msg['predmet'],
-                'text' => $msg['text'],
+                'subject' => EncryptionHelper::decrypt($msg['predmet'], $key),
+                'text' => EncryptionHelper::decrypt($msg['text'], $key),
                 'date' => $msg['datum'],
                 'isRead' => (bool)$msg['precteno'],
                 'otherUser' => [
@@ -110,7 +113,7 @@ if ($method === 'POST') {
         }
 
         $stmt = $pdo->prepare("INSERT INTO zpravy (id_odesilatel, id_prijemce, predmet, text, datum) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->execute([$userId, $recipientId, $subject, $text]);
+        $stmt->execute([$userId, $recipientId, EncryptionHelper::encrypt($subject, $key), EncryptionHelper::encrypt($text, $key)]);
 
         echo json_encode(['ok' => true]);
 
