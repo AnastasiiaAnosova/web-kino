@@ -18,8 +18,8 @@ export const Home = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Featured film (první film v databázi)
-  const featuredFilm = films[0];
+  // Featured film (druhý film v databázi protože má časy a to je pěknější)
+  const featuredFilm = films[1];
 
   const handleAuthClick = () => {
     if (isAuthenticated) {

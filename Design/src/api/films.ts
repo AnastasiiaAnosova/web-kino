@@ -1,5 +1,5 @@
 import { Film, Showtime, Screening } from '../types';
-import { API_BASE_URL, API_ENDPOINTS, USE_MOCK_DATA } from './config';
+import { API_BASE_URL, API_ENDPOINTS, USE_MOCK_DATA, handleApiError } from './config';
 import { FILM_POSTERS_BY_ID, FALLBACK_POSTER } from './filmPosters';
 
 type FilmDbRow = {
@@ -28,7 +28,7 @@ async function apiFetch(path: string, init: RequestInit = {}) {
     try {
       const j = await res.json();
       msg = j.error || j.message || msg;
-    } catch {}
+    } catch {handleApiError(res)}
     throw new Error(`${res.status} ${msg}`);
   }
 

@@ -26,6 +26,8 @@ export const API_ENDPOINTS = {
   RESERVE_GUEST: '/api/reserve_guest.php',
 } as const;
 
+export const STORAGE_KEY = 'currentUser';
+
 export const getApiHeaders = (): HeadersInit => ({
   'Content-Type': 'application/json',
 });
@@ -38,6 +40,15 @@ export class ApiError extends Error {
 }
 
 export const handleApiError = async (response: Response): Promise<never> => {
+
+  // Pokud nastane chyba při autentifikaci kvůli timeoutu, tak nezapomenout odnastavit uživatele v useAuth
+  if(response.status == 401){
+      localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event('userLogout'));
+      //return null as never;
+  }
+
+
   const data = await response.json().catch(() => ({}));
   throw new ApiError(
     response.status,

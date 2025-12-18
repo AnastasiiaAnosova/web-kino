@@ -72,21 +72,33 @@ export const addReply = async (filmId: string, reviewId: number, text: string): 
 };
 
 export const likeReview = async (reviewId: number): Promise<void> => {
+
     const csrf = await getCsrf();
-    await fetch(`${API_BASE_URL}${API_ENDPOINTS.LIKE_REVIEW(reviewId)}`, {
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LIKE_REVIEW(reviewId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body: JSON.stringify({ reviewId, type: 'LIKE' })
     });
+
+    if (!response.ok) {
+      return handleApiError(response);
+    }
 };
 
 export const dislikeReview = async (reviewId: number): Promise<void> => {
+
     const csrf = await getCsrf();
-    await fetch(`${API_BASE_URL}${API_ENDPOINTS.LIKE_REVIEW(reviewId)}`, {
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LIKE_REVIEW(reviewId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body: JSON.stringify({ reviewId, type: 'DISLIKE' })
     });
+
+    if (!response.ok) {
+      return handleApiError(response);
+    }
 };

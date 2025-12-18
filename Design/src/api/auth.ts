@@ -1,8 +1,6 @@
 // src/api/auth.ts
 import { User } from '../types';
-import { API_BASE_URL, API_ENDPOINTS, USE_MOCK_DATA } from './config';
-
-const STORAGE_KEY = 'currentUser';
+import { STORAGE_KEY, API_BASE_URL, API_ENDPOINTS, handleApiError, USE_MOCK_DATA } from './config';
 
 async function apiFetch(path: string, init: RequestInit = {}) {
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -15,7 +13,7 @@ async function apiFetch(path: string, init: RequestInit = {}) {
     try {
       const j = await res.json();
       msg = j.error || j.message || msg;
-    } catch {}
+    } catch {handleApiError(res)}
     throw new Error(`${res.status} ${msg}`);
   }
 

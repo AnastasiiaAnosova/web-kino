@@ -199,14 +199,15 @@ const ReplyItem = ({ reply, onReply }: { reply: Reply, onReply?: (replyId: numbe
       </div>
       <p className="font-serif text-gray-700 text-sm mb-2">{reply.text}</p>
       <div className="flex items-center gap-3 text-xs text-gray-500">
-        <button className="flex items-center gap-1 hover:text-[#912D3C] transition-colors">
+        {/* Pro jednoduchost není třeba mít like/dislike u odpovědí*/}
+        {/* <button className="flex items-center gap-1 hover:text-[#912D3C] transition-colors">
           <ThumbsUp className="w-3 h-3" strokeWidth={2} />
           <span>{reply.likes}</span>
         </button>
         <button className="flex items-center gap-1 hover:text-[#912D3C] transition-colors">
           <ThumbsDown className="w-3 h-3" strokeWidth={2} />
           <span>{reply.dislikes}</span>
-        </button>
+        </button> */}
         
         <button
           onClick={() => setShowReplyForm(!showReplyForm)}
