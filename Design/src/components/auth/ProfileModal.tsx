@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Mail, Phone, Settings, Bell, LogOut, User as UserIcon } from 'lucide-react';
+import { X, Mail, Phone, Settings, Bell, LogOut, User as UserIcon, Send } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getMessages, getUnreadCount, Message, markAsRead } from '../../api/messages';
+import { getMessages, getUnreadCount, Message, markAsRead, sendMessage } from '../../api/messages';
+import { getAllUsers } from '../../api/get_users';
+import { User } from '../../types';
+import { getCurrentUser } from '../../api/auth';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -13,9 +16,17 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
 
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSendMessage, setShowSendMessage] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [usersMessages, setUsersMessages] = useState([] as Message[]);
   const [currentOpenMessage, setCurrentOpenMessage] = useState(-1);
+  const [recipientUsers, setRecipientUsers] = useState([] as User[]);
+
+  const [formData, setFormData] = useState({
+    recipient: '',
+    subject: '',
+    text: ''
+  });
   
   useEffect(() => {
 
@@ -23,7 +34,8 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
 
       updateUnreadCount();
       getUsersMesages();
-      
+      getAllRecipients();
+
   }, [isOpen]);
 
   // Při změně viditelnosti zpráv
@@ -44,6 +56,19 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
 
   const updateUnreadCount = async () => {
     setUnreadMessagesCount(await getUnreadCount());
+  }
+
+  const getAllRecipients = async () => {
+
+    const allUsers = await getAllUsers();
+
+    const currentUser = getCurrentUser();
+
+    if(!currentUser) return;
+
+    setRecipientUsers(allUsers.filter((user) => {
+      return user.role != 'host' && user.id != currentUser.id;
+    }));
   }
 
   const handleLogout = () => {
@@ -72,6 +97,23 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
 
     updateUnreadCount();
     getUsersMesages();
+  }
+
+  const handleMessageSubmit = () => {
+
+    sendMessage(formData.recipient, formData.subject, formData.text);
+
+  }
+
+  const handleMessageCancel = () => {
+
+    setFormData({
+      recipient: '',
+      subject: '',
+      text: ''
+    });
+
+    setShowSendMessage(false);
   }
 
 
@@ -152,7 +194,7 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
           </button>
           
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {setShowNotifications(!showNotifications); setShowSendMessage(false);}}
             className="relative p-3 bg-white border-2 border-[#912D3C] hover:bg-[#912D3C] hover:text-white transition-colors shadow-[3px_3px_0px_rgba(145,45,60,0.3)] hover:shadow-[5px_5px_0px_rgba(145,45,60,0.4)]"
             title="Oznámení"
           >
@@ -165,6 +207,14 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
                 {unreadMessagesCount}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => {setShowSendMessage(!showSendMessage); setShowNotifications(false);}}
+            className="p-3 bg-white border-2 border-[#912D3C] hover:bg-[#912D3C] hover:text-white transition-colors shadow-[3px_3px_0px_rgba(145,45,60,0.3)] hover:shadow-[5px_5px_0px_rgba(145,45,60,0.4)]"
+            title="Upravit údaje"
+          >
+            <Send className="w-5 h-5" strokeWidth={2} />
           </button>
         </div>
 
@@ -237,6 +287,88 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
             </div>
           </div>
         )}
+
+        {showSendMessage && 
+          <form onSubmit={handleMessageSubmit} className="space-y-4 bg-[#f8f8f8] border-2 border-black p-4">
+
+            {/* Recipient */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-gray-700 mb-1">
+                PŘÍJEMCE
+              </label>
+              <select
+                onChange={(e) => setFormData({ ...formData, recipient: e.target.value})}
+                required
+                className="w-full px-3 py-2 border border-gray-300 bg-white focus:border-[#912D3C] focus:ring-2 
+                  focus:ring-[#912D3C]/20 font-serif text-sm"
+              >
+                <option value="">Vyberte uživatele</option>
+                { recipientUsers.map((user: User) => {
+                  return <option 
+                      key={user.id} 
+                      value={user.username}>{user.firstName + " " + (user.lastName || user.id) + ((user.email) ? " (" + user.email + ")" : "")}
+                      </option>
+                })}
+              </select>
+            </div>
+
+            {/* Subject */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-gray-700 mb-1">
+                PŘEDMĚT
+              </label>
+              <input
+                type="text"
+                maxLength={120}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:border-[#912D3C] focus:ring-2 focus:ring-[#912D3C]/20
+                          font-serif text-sm"
+                placeholder="Předmět zprávy"
+              />
+            </div>
+
+            {/* Message body */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-gray-700 mb-1">
+                ZPRÁVA
+              </label>
+              <textarea
+                rows={4}
+                maxLength={512}
+                onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-gray-300 resize-none focus:border-[#912D3C] focus:ring-2 focus:ring-[#912D3C]/20
+                          font-serif text-sm"
+                placeholder="Napište zprávu…"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleMessageCancel}
+                //disabled={false}
+                className="flex items-center gap-2 px-4 py-2 border-2 border-gray-400 text-gray-600 hover:bg-gray-200 transition-colors
+                          font-display text-xs tracking-wider"
+              >
+                <X className="w-4 h-4" />
+                ZRUŠIT
+              </button>
+
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-4 py-2 bg-[#912D3C] text-white border-2 border-[#912D3C] hover:bg-[#A43D4C] 
+                          transition-colors font-display text-xs tracking-wider shadow-[3px_3px_0px_rgba(145,45,60,0.3)]"
+              >
+                <Send className="w-4 h-4" />
+                ODESLAT
+              </button>
+            </div>
+          </form>
+          
+        }
 
         {/* Logout button */}
         <div className="pt-6 border-t-2 border-gray-200">

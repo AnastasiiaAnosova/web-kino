@@ -21,7 +21,7 @@ csrfCheckOrFail();
 try {
     $pdo = getConnection();
 
-    $stmt = $pdo->query("SELECT id_uzivatel, jmeno, prijmeni, email, telefon, pohlavi, role, profilove_foto FROM uzivatele");
+    $stmt = $pdo->query("SELECT id_uzivatel, jmeno, prijmeni, username, email, telefon, pohlavi, role, profilove_foto FROM uzivatele");
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $formattedUsers = array_map(function($u) use ($key) {
@@ -29,6 +29,7 @@ try {
             'id' => $u['id_uzivatel'],
             'firstName' => $u['jmeno'],
             'lastName' => $u['prijmeni'],
+            'username' => $u['username'],
             'email' => $u['email'],
             'phone' => $u['telefon'] ? EncryptionHelper::decrypt($u['telefon'], $key) : '',
             'gender' => $u['pohlavi'],

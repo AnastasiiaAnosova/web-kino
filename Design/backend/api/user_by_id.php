@@ -23,7 +23,7 @@ if (!$userId) {
 try {
     $pdo = getConnection();
 
-    $stmt = $pdo->prepare("SELECT id_uzivatel, jmeno, prijmeni, email, telefon, pohlavi, profilove_foto, `role`
+    $stmt = $pdo->prepare("SELECT id_uzivatel, jmeno, prijmeni, username, email, telefon, pohlavi, profilove_foto, `role`
                            FROM uzivatele 
                            WHERE id_uzivatel = ? 
                            LIMIT 1");
@@ -41,6 +41,7 @@ try {
             'id' => $user['id_uzivatel'],
             'firstName' => $user['jmeno'],
             'lastName' => $user['prijmeni'],
+            'username' => $user['username'],
             'email' => $user['email'],
             'phone' => $user['telefon'] ? EncryptionHelper::decrypt($user['telefon'], $key) : '',
             'gender' => $user['pohlavi'] ?? 'other',
