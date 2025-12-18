@@ -21,6 +21,7 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
   const [usersMessages, setUsersMessages] = useState([] as Message[]);
   const [currentOpenMessage, setCurrentOpenMessage] = useState(-1);
   const [recipientUsers, setRecipientUsers] = useState([] as User[]);
+  const [messageType, setMessageType] = useState("inbox" as "inbox" | "sent");
 
   const [formData, setFormData] = useState({
     recipient: '',
@@ -33,7 +34,7 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
       if (!isOpen || !user) return;
 
       updateUnreadCount();
-      getUsersMesages();
+      getUsersMesages(messageType);
       getAllRecipients();
 
   }, [isOpen]);
@@ -43,15 +44,23 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
 
     if(showNotifications){
 
-      getUsersMesages();
+      getUsersMesages(messageType);
     }
       
   }, [showNotifications]);
 
+  useEffect(() => {
+
+    if (!isOpen || !user) return;
+
+    getUsersMesages(messageType);
+      
+  }, [messageType]);
+
   if (!isOpen || !user) return null;
 
-  const getUsersMesages = async () => {
-    setUsersMessages(await getMessages("inbox"));
+  const getUsersMesages = async (getMessageType = "inbox") => {
+    setUsersMessages(await getMessages(getMessageType as "inbox" | "sent"));
   }
 
   const updateUnreadCount = async () => {
@@ -93,10 +102,13 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
   const handleMessageClick = async (message: Message) => {
 
     setCurrentOpenMessage((currentOpenMessage == message.id) ? -1 : message.id);
-    await markAsRead(message.id);
 
-    updateUnreadCount();
-    getUsersMesages();
+    if(messageType == "inbox"){
+      await markAsRead(message.id);
+      updateUnreadCount();
+    }
+    
+    getUsersMesages(messageType);
   }
 
   const handleMessageSubmit = () => {
@@ -230,6 +242,32 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
                 ✕
               </button>
             </div>
+
+            {/* Inbox / Sent switch */}
+            <div className="flex border-b-2 border-black">
+              <button
+                onClick={() => setMessageType('inbox')}
+                className={`flex-1 py-2 text-xs font-display tracking-wider border-r-2 border-black transition-colors
+                  ${messageType === 'inbox'
+                    ? 'bg-white text-[#912D3C]'
+                    : 'bg-[#f0f0f0] text-gray-600 hover:bg-white'
+                  }`}
+              >
+                DORUČENÉ
+              </button>
+
+              <button
+                onClick={() => setMessageType('sent')}
+                className={`flex-1 py-2 text-xs font-display tracking-wider transition-colors
+                  ${messageType === 'sent'
+                    ? 'bg-white text-[#912D3C]'
+                    : 'bg-[#f0f0f0] text-gray-600 hover:bg-white'
+                  }`}
+              >
+                ODESLANÉ
+              </button>
+            </div>
+
             <div className="p-4">
               {usersMessages.length <= 0 && 
               <p className="font-serif text-sm italic text-gray-500 text-center">
@@ -269,7 +307,7 @@ export const ProfileModal = ({ isOpen, onClose, onEditProfile }: ProfileModalPro
                         {/* Date and unread indicator */}
                         <div className="flex flex-col items-end">
                           <span className="text-xs text-gray-400">{new Date(message.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          {!message.isRead && (
+                          {(!message.isRead && messageType == "inbox") && (
                             <span className="mt-1 w-3 h-3 rounded-full bg-[#912D3C] ring-1 ring-white" />
                           )}
                         </div>
